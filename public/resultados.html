@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados da Votação</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1><i class="fas fa-chart-line"></i> Resultados da Votação</h1>
+            <div class="nav-right">
+                <span><i class="fas fa-user-circle"></i> <span id="nomeUsuario"></span></span>
+                <button onclick="logout()" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="resultados-header">
+            <h2 id="eventoTitulo"><i class="fas fa-poll"></i> Resultados em Tempo Real</h2>
+            <p class="atualizacao">
+                <span class="status-indicator"></span>
+                Atualização automática ativa
+            </p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3><i class="fas fa-vote-yea"></i> Total de Votos</h3>
+                <p class="stat-value" id="totalVotos">0</p>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-weight"></i> Peso Total</h3>
+                <p class="stat-value" id="pesoTotal">0</p>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-percentage"></i> Participação</h3>
+                <p class="stat-value" id="participacao">0%</p>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-city"></i> Municípios Participantes</h3>
+                <p class="stat-value" id="totalParticipantes">0</p>
+            </div>
+        </div>
+
+        <!-- Gráfico de Barras Empilhadas -->
+        <div class="charts-container">
+            <div class="chart-box" style="grid-column: 1 / -1;">
+                <h3><i class="fas fa-chart-bar"></i> Distribuição de Votos (0-100%)</h3>
+                <canvas id="chartBarras" style="max-height: 200px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabela de Resumo dos Resultados - ATUALIZADA (3 colunas) -->
+        <div class="detalhes-resultados">
+            <h3><i class="fas fa-table"></i> Resumo dos Resultados</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Opção</th>
+                            <th>Peso Total</th>
+                            <th>% Peso</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaResultados">
+                        <tr>
+                            <td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tabela de Votos por Município -->
+        <div class="detalhes-resultados" style="margin-top: 2rem;">
+            <h3><i class="fas fa-city"></i> Votos por Município</h3>
+            <p style="color: var(--gray-dark); margin-bottom: 1rem;">
+                <i class="fas fa-info-circle"></i> Detalhamento de todos os votos registrados por município
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-map-marker-alt"></i> Município</th>
+                            <th><i class="fas fa-vote-yea"></i> Voto(s)</th>
+                            <th><i class="fas fa-sort-numeric-up"></i> Qtd. Votos</th>
+                            <th><i class="fas fa-weight"></i> Peso</th>
+                            <th><i class="fas fa-user"></i> Votante</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaVotosMunicipios">
+                        <tr>
+                            <td colspan="5" class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/modal-confirm.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/resultados.js"></script>
+</body>
+
+</html>

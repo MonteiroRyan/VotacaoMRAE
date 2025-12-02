@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1><i class="fas fa-user-shield"></i> Painel Administrativo</h1>
+            <div class="nav-right">
+                <span><i class="fas fa-user-circle"></i> <span id="nomeUsuario"></span></span>
+                <button onclick="logout()" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="mudarTab('eventos')">
+                <i class="fas fa-calendar-check"></i> Eventos
+            </button>
+            <button class="tab-button" onclick="mudarTab('usuarios')">
+                <i class="fas fa-users"></i> Usuários
+            </button>
+            <button class="tab-button" onclick="mudarTab('municipios')">
+                <i class="fas fa-city"></i> Municípios
+            </button>
+            <button class="tab-button" onclick="mudarTab('importacao')">
+                <i class="fas fa-file-upload"></i> Importar Dados
+            </button>
+        </div>
+
+        <!-- TAB: Eventos -->
+        <div id="tab-eventos" class="tab-content active">
+            <div class="section-header">
+                <h2><i class="fas fa-calendar-check"></i> Gerenciar Eventos de Votação</h2>
+                <button onclick="abrirModalEvento()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Novo Evento
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Tipo</th>
+                            <th>Data Início</th>
+                            <th>Data Fim</th>
+                            <th>Participantes</th>
+                            <th>Presentes</th>
+                            <th>Votos</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaEventos">
+                        <tr>
+                            <td colspan="10" class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: Usuários -->
+        <div id="tab-usuarios" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-users"></i> Gerenciar Usuários</h2>
+                <button onclick="abrirModalUsuario()" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Novo Usuário
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>CPF</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Município</th>
+                            <th>Peso</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaUsuarios">
+                        <tr>
+                            <td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: Municípios -->
+        <div id="tab-municipios" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-city"></i> Gerenciar Municípios</h2>
+                <button onclick="abrirModalMunicipio()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Novo Município
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Peso</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaMunicipios">
+                        <tr>
+                            <td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: Importação -->
+        <div id="tab-importacao" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-file-upload"></i> Importação em Lote de Usuários</h2>
+            </div>
+
+            <div id="mensagemImport" class="mensagem" style="display: none; margin-bottom: 1rem;"></div>
+
+            <div class="import-container">
+                <!-- Passo 1: Download do Modelo -->
+                <div class="import-step">
+                    <h3><i class="fas fa-download"></i> Passo 1: Baixar Modelo</h3>
+                    <p>Baixe o modelo de planilha Excel e preencha com os dados dos prefeitos e representantes.</p>
+                    <button onclick="baixarModelo()" class="btn btn-primary">
+                        <i class="fas fa-file-excel"></i> Baixar Modelo (.xlsx)
+                    </button>
+
+                    <div class="info-box" style="margin-top: 1rem;">
+                        <p><strong>📋 Colunas obrigatórias:</strong></p>
+                        <ul>
+                            <li><strong>cpf:</strong> CPF do usuário (apenas números ou formatado)</li>
+                            <li><strong>nome:</strong> Nome completo</li>
+                            <li><strong>tipo:</strong> PREFEITO ou REPRESENTANTE</li>
+                            <li><strong>municipio:</strong> Nome do município</li>
+                            <li><strong>peso:</strong> Peso do município (opcional, padrão: 1.00)</li>
+                            <li><strong>ativo:</strong> SIM ou NÃO (opcional, padrão: SIM)</li>
+                        </ul>
+                        <p style="margin-top: 1rem;"><strong><i class="fas fa-lightbulb"></i> Dicas:</strong></p>
+                        <ul>
+                            <li>O CPF pode ser inserido com ou sem formatação (000.000.000-00 ou 00000000000)</li>
+                            <li>Se o município não existir, ele será criado automaticamente com o peso informado</li>
+                            <li>Se o CPF já existir, os dados serão atualizados</li>
+                            <li>Máximo de 5MB por arquivo</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Passo 2: Upload do Arquivo -->
+                <div class="import-step">
+                    <h3><i class="fas fa-upload"></i> Passo 2: Fazer Upload da Planilha</h3>
+                    <p>Selecione o arquivo Excel preenchido para fazer o upload.</p>
+
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="arquivoImport" accept=".xlsx,.xls,.csv" style="display: none;"
+                            onchange="handleFileSelect(event)">
+                        <div class="upload-placeholder" onclick="document.getElementById('arquivoImport').click()">
+                            <i class="fas fa-cloud-upload-alt"
+                                style="font-size: 3rem; color: var(--primary-color);"></i>
+                            <p>Clique aqui ou arraste o arquivo</p>
+                            <small>Formatos aceitos: .xlsx, .xls, .csv (máx: 5MB)</small>
+                        </div>
+                    </div>
+
+                    <div id="nomeArquivo" style="margin-top: 1rem; display: none;">
+                        <i class="fas fa-file-excel"></i> <span id="nomeArquivoTexto"></span>
+                        <button onclick="limparArquivo()" class="btn btn-sm btn-danger" style="margin-left: 1rem;">
+                            <i class="fas fa-times"></i> Remover
+                        </button>
+                    </div>
+
+                    <button id="btnProcessar" onclick="processarPlanilha()" class="btn btn-success"
+                        style="margin-top: 1rem; display: none;">
+                        <i class="fas fa-cog"></i> Processar Planilha
+                    </button>
+                </div>
+
+                <!-- Passo 3: Preview e Confirmação -->
+                <div class="import-step" id="stepPreview" style="display: none;">
+                    <h3><i class="fas fa-eye"></i> Passo 3: Revisar e Confirmar</h3>
+
+                    <div id="previewResultado"></div>
+
+                    <div id="acoesImport" style="margin-top: 2rem; text-align: center; display: none;">
+                        <button onclick="confirmarImportacao()" class="btn btn-success btn-lg">
+                            <i class="fas fa-check"></i> Confirmar Importação
+                        </button>
+                        <button onclick="cancelarImportacao()" class="btn btn-secondary btn-lg"
+                            style="margin-left: 1rem;">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Passo 4: Resultado -->
+                <div class="import-step" id="stepResultado" style="display: none;">
+                    <h3><i class="fas fa-check-circle"></i> Resultado da Importação</h3>
+                    <div id="resultadoImportacao"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Evento -->
+    <div id="modalEvento" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="fecharModalEvento()">&times;</span>
+            <h2 id="tituloModalEvento"><i class="fas fa-calendar-plus"></i> Novo Evento de Votação</h2>
+
+            <form id="formEvento">
+                <input type="hidden" id="eventoId">
+
+                <div class="form-group">
+                    <label for="eventoTitulo"><i class="fas fa-heading"></i> Título *</label>
+                    <input type="text" id="eventoTitulo" required maxlength="500"
+                        placeholder="Ex: Votação para Presidente da Associação">
+                </div>
+
+                <div class="form-group">
+                    <label for="eventoDescricao"><i class="fas fa-align-left"></i> Descrição</label>
+                    <textarea id="eventoDescricao" rows="3" placeholder="Descrição opcional do evento"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventoTipoVotacao"><i class="fas fa-vote-yea"></i> Tipo de Votação *</label>
+                    <select id="eventoTipoVotacao" required onchange="toggleOpcoesVotacao()">
+                        <option value="">Selecione...</option>
+                        <option value="SIM_NAO">Sim/Não (com Voto Nulo e Abstenção)</option>
+                        <option value="APROVACAO">Por Aprovação (Aprovar/Reprovar com Voto Nulo e Abstenção)</option>
+                        <option value="ALTERNATIVAS">Por Alternativas (Múltiplas Opções - Votação Múltipla)</option>
+                    </select>
+                    <small>Escolha o tipo de votação adequado para o evento</small>
+
+                    <div
+                        style="margin-top: 1rem; padding: 0.75rem; background: var(--info-light); border-radius: var(--radius); border-left: 3px solid var(--info-color);">
+                        <p style="margin: 0; font-size: 0.9rem;"><strong><i class="fas fa-info-circle"></i> Opções
+                                incluídas automaticamente:</strong></p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem; font-size: 0.85rem;">
+                            <li><strong>Sim/Não:</strong> SIM, NÃO, Voto Nulo ou Branco, Abstenção</li>
+                            <li><strong>Aprovação:</strong> Aprovar, Reprovar, Voto Nulo ou Branco, Abstenção</li>
+                            <li><strong>Alternativas:</strong> Voto Nulo ou Branco e Abstenção (adicionados aos
+                                candidatos)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group" id="grupoOpcoesVotacao" style="display: none;">
+                    <label><i class="fas fa-list"></i> Candidatos/Alternativas *</label>
+                    <div id="listaOpcoesVotacao" style="margin-bottom: 0.5rem;">
+                        <!-- Opções serão adicionadas aqui -->
+                    </div>
+                    <button type="button" onclick="adicionarOpcaoVotacao()" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-plus"></i> Adicionar Candidato/Opção
+                    </button>
+                    <small>
+                        Adicione os nomes dos candidatos ou alternativas.<br>
+                        <strong><i class="fas fa-exclamation-circle"></i> Nota:</strong>
+                        <span style="background: var(--warning-light); padding: 0.25rem 0.5rem; border-radius: 4px;">
+                            "Voto Nulo ou Branco" e "Abstenção"
+                        </span> serão adicionados automaticamente como opções especiais.
+                    </small>
+                </div>
+
+                <div class="form-group" id="grupoVotacaoMultipla" style="display: none;">
+                    <label>
+                        <input type="checkbox" id="eventoVotacaoMultipla" onchange="toggleVotosMaximos()" checked>
+                        <i class="fas fa-check-double"></i> Permitir votação em múltiplas opções (Recomendado)
+                    </label>
+                    <small>Para votação por alternativas, cada município pode votar em vários candidatos/opções</small>
+                    <div id="grupoVotosMaximos" style="display: block; margin-top: 1rem;">
+                        <label for="eventoVotosMaximos"><i class="fas fa-sort-numeric-up"></i> Quantidade máxima de
+                            votos por município *</label>
+                        <input type="number" id="eventoVotosMaximos" min="1" max="20" value="3">
+                        <small>Quantos candidatos/opções cada município pode votar (recomendado: 3 a 5)</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventoDataInicio"><i class="fas fa-calendar-alt"></i> Data/Hora Início *</label>
+                        <input type="datetime-local" id="eventoDataInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventoDataFim"><i class="fas fa-calendar-alt"></i> Data/Hora Fim *</label>
+                        <input type="datetime-local" id="eventoDataFim" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventoPesoQuorum"><i class="fas fa-percentage"></i> Quórum Mínimo (% Peso) *</label>
+                    <input type="number" id="eventoPesoQuorum" min="0" max="100" step="0.01" value="60" required>
+                    <small>Percentual mínimo de peso para validar a votação</small>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Participantes *</label>
+                    <div
+                        style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem;">
+                        <div id="listaParticipantes">
+                            <p class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando usuários...</p>
+                        </div>
+                    </div>
+                    <small>Selecione os usuários que podem participar deste evento</small>
+                </div>
+
+                <div id="mensagemEvento" class="mensagem"></div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar Evento
+                    </button>
+                    <button type="button" onclick="fecharModalEvento()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Detalhes do Evento -->
+    <div id="modalDetalhesEvento" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="fecharModalDetalhesEvento()">&times;</span>
+            <h2><i class="fas fa-info-circle"></i> Detalhes do Evento</h2>
+            <div id="conteudoDetalhesEvento">
+                <p class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Usuário -->
+    <div id="modalUsuario" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalUsuario()">&times;</span>
+            <h2 id="tituloModalUsuario"><i class="fas fa-user-plus"></i> Novo Usuário</h2>
+
+            <form id="formUsuario">
+                <input type="hidden" id="usuarioId">
+
+                <div class="form-group">
+                    <label for="usuarioCpf"><i class="fas fa-id-card"></i> CPF *</label>
+                    <input type="text" id="usuarioCpf" required maxlength="14" placeholder="000.000.000-00">
+                </div>
+
+                <div class="form-group">
+                    <label for="usuarioNome"><i class="fas fa-user"></i> Nome *</label>
+                    <input type="text" id="usuarioNome" required placeholder="Nome completo">
+                </div>
+
+                <div class="form-group">
+                    <label for="usuarioTipo"><i class="fas fa-user-tag"></i> Tipo *</label>
+                    <select id="usuarioTipo" required onchange="toggleCamposUsuario()">
+                        <option value="">Selecione...</option>
+                        <option value="ADMIN">Administrador</option>
+                        <option value="PREFEITO">Prefeito</option>
+                        <option value="REPRESENTANTE">Representante</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="grupoSenha" style="display: none;">
+                    <label for="usuarioSenha"><i class="fas fa-lock"></i> Senha</label>
+                    <input type="password" id="usuarioSenha" placeholder="Deixe em branco para não alterar">
+                    <small>Apenas para administradores</small>
+                </div>
+
+                <div class="form-group" id="grupoMunicipio" style="display: none;">
+                    <label for="usuarioMunicipio"><i class="fas fa-city"></i> Município *</label>
+                    <select id="usuarioMunicipio">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="usuarioAtivo" checked>
+                        <i class="fas fa-check-circle"></i> Usuário Ativo
+                    </label>
+                </div>
+
+                <div id="mensagemUsuario" class="mensagem"></div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <button type="button" onclick="fecharModalUsuario()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Município -->
+    <div id="modalMunicipio" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalMunicipio()">&times;</span>
+            <h2 id="tituloModalMunicipio"><i class="fas fa-city"></i> Novo Município</h2>
+
+            <form id="formMunicipio">
+                <input type="hidden" id="municipioId">
+
+                <div class="form-group">
+                    <label for="municipioNome"><i class="fas fa-map-marker-alt"></i> Nome *</label>
+                    <input type="text" id="municipioNome" required placeholder="Nome do município">
+                </div>
+
+                <div class="form-group">
+                    <label for="municipioPeso"><i class="fas fa-weight"></i> Peso *</label>
+                    <input type="number" id="municipioPeso" min="0" step="0.01" value="1.00" required>
+                    <small>Peso para cálculo de quórum ponderado</small>
+                </div>
+
+                <div id="mensagemMunicipio" class="mensagem"></div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <button type="button" onclick="fecharModalMunicipio()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/modal-confirm.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/admin.js"></script>
+    <script src="/js/import.js"></script>
+</body>
+
+</html>
