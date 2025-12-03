@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Dashboard - Sistema de Votação</title>
+ <link rel="stylesheet" href="/css/style.css">
+ <link rel="stylesheet" href="/css/design-tokens.css">
+ <link rel="stylesheet" href="/css/components. css">
+ <link rel="stylesheet" href="/css/dashboard. css">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn. jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+ <nav class="navbar">
+  <div class="nav-container">
+   <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+   <div class="nav-right">
+    <span><i class="fas fa-user-circle"></i> <span id="nomeUsuario"></span></span>
+    <button onclick="logout()" class="btn btn-secondary">
+     <i class="fas fa-sign-out-alt"></i> Sair
+    </button>
+   </div>
+  </div>
+ </nav>
+
+ <div class="container fade-in">
+  <!-- Widgets de Estatísticas -->
+  <div class="stats-grid">
+   <div class="stat-widget" id="widgetEventos">
+    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+     <i class="fas fa-calendar-check fa-2x"></i>
+    </div>
+    <div class="stat-content">
+     <h3>Eventos Ativos</h3>
+     <p class="stat-number" id="totalEventosAtivos">0</p>
+     <small class="stat-trend positive">
+      <i class="fas fa-arrow-up"></i> 12% vs mês anterior
+     </small>
+    </div>
+   </div>
+
+   <div class="stat-widget" id="widgetVotos">
+    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+     <i class="fas fa-vote-yea fa-2x"></i>
+    </div>
+    <div class="stat-content">
+     <h3>Votos Registrados</h3>
+     <p class="stat-number" id="totalVotos">0</p>
+     <small class="stat-trend positive">
+      <i class="fas fa-arrow-up"></i> 8% hoje
+     </small>
+    </div>
+   </div>
+
+   <div class="stat-widget" id="widgetMunicipios">
+    <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+     <i class="fas fa-city fa-2x"></i>
+    </div>
+    <div class="stat-content">
+     <h3>Municípios Participantes</h3>
+     <p class="stat-number" id="totalMunicipiosParticipantes">0</p>
+     <small class="stat-trend neutral">
+      <i class="fas fa-minus"></i> Sem mudanças
+     </small>
+    </div>
+   </div>
+
+   <div class="stat-widget" id="widgetQuorum">
+    <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+     <i class="fas fa-chart-pie fa-2x"></i>
+    </div>
+    <div class="stat-content">
+     <h3>Taxa de Participação</h3>
+     <p class="stat-number" id="taxaParticipacao">0%</p>
+     <small class="stat-trend positive">
+      <i class="fas fa-arrow-up"></i> Meta: 60%
+     </small>
+    </div>
+   </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="charts-row">
+   <div class="chart-card">
+    <div class="chart-header">
+     <h3><i class="fas fa-chart-bar"></i> Votações por Mês</h3>
+     <select id="selectAno" class="select-modern">
+      <option value="2025">2025</option>
+      <option value="2024">2024</option>
+     </select>
+    </div>
+    <canvas id="chartVotacoesMes"></canvas>
+   </div>
+
+   <div class="chart-card">
+    <div class="chart-header">
+     <h3><i class="fas fa-chart-pie"></i> Tipos de Votação</h3>
+    </div>
+    <canvas id="chartTiposVotacao"></canvas>
+   </div>
+  </div>
+
+  <!-- Eventos Recentes -->
+  <div class="recent-events-card">
+   <div class="card-header">
+    <h3><i class="fas fa-history"></i> Eventos Recentes</h3>
+    <a href="/eventos. html" class="btn btn-sm btn-outline">Ver Todos</a>
+   </div>
+   <div class="timeline" id="timelineEventos">
+    <!-- Eventos serão renderizados aqui -->
+   </div>
+  </div>
+
+  <!-- Atividade em Tempo Real -->
+  <div class="activity-feed-card">
+   <div class="card-header">
+    <h3><i class="fas fa-rss"></i> Atividade em Tempo Real</h3>
+    <span class="live-indicator">
+     <span class="pulse"></span> Ao Vivo
+    </span>
+   </div>
+   <div class="activity-feed" id="activityFeed">
+    <!-- Atividades serão renderizadas aqui -->
+   </div>
+  </div>
+ </div>
+
+ <script src="/js/modal-confirm.js"></script>
+ <script src="/js/utils.js"></script>
+ <script src="/js/toast.js"></script>
+ <script src="/js/dashboard.js"></script>
+</body>
+
+</html>

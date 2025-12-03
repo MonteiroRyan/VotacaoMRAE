@@ -206,14 +206,14 @@ function abrirModalEvento() {
   document.getElementById("eventoDataFim").value = dataFim
     .toISOString()
     .slice(0, 16);
+  document.getElementById("eventoPesoQuorum").value = "50.00"; // Padrão > 50%
 
   document.getElementById("grupoOpcoesVotacao").style.display = "none";
   document.getElementById("grupoVotacaoMultipla").style.display = "none";
 
-  // Limpar lista de opções
   document.getElementById("listaOpcoesVotacao").innerHTML = "";
 
-  carregarUsuariosParaEvento();
+  // REMOVER carregamento de participantes - agora é automático
   document.getElementById("modalEvento").classList.add("show");
 }
 
@@ -319,7 +319,7 @@ async function salvarEvento(e) {
     votos_maximos =
       parseInt(document.getElementById("eventoVotosMaximos").value) || 1;
 
-    const inputs = document.querySelectorAll(".opcao-votacao-input");
+    const inputs = document.querySelectorAll(". opcao-votacao-input");
     opcoes_votacao = Array.from(inputs)
       .map((input) => input.value.trim())
       .filter((v) => v);
@@ -327,34 +327,11 @@ async function salvarEvento(e) {
     if (opcoes_votacao.length < 2) {
       mostrarMensagem(
         "mensagemEvento",
-        "Para votação por alternativas, forneça pelo menos 2 opções (candidatos/alternativas)",
+        "Para votação por alternativas, forneça pelo menos 2 opções",
         "error"
       );
       return;
     }
-
-    if (!votacao_multipla) {
-      const confirmar = await confirmCustom(
-        "Para votação por alternativas, é recomendado permitir votação múltipla.\n\nDeseja continuar com voto único?",
-        "Atenção",
-        "warning"
-      );
-      if (!confirmar) return;
-    }
-  }
-
-  const checkboxes = document.querySelectorAll(
-    'input[name="participantes"]:checked'
-  );
-  const participantes = Array.from(checkboxes).map((cb) => parseInt(cb.value));
-
-  if (participantes.length === 0) {
-    mostrarMensagem(
-      "mensagemEvento",
-      "Selecione pelo menos um participante",
-      "error"
-    );
-    return;
   }
 
   try {
@@ -370,7 +347,7 @@ async function salvarEvento(e) {
         data_inicio,
         data_fim,
         peso_minimo_quorum,
-        participantes,
+        // REMOVIDO: participantes - agora é automático
       }),
     });
 
@@ -379,7 +356,7 @@ async function salvarEvento(e) {
       setTimeout(() => {
         fecharModalEvento();
         carregarEventos();
-      }, 1500);
+      }, 2000);
     }
   } catch (error) {
     mostrarMensagem("mensagemEvento", error.message, "error");
@@ -728,34 +705,43 @@ function renderizarUsuarios() {
   }
 
   tbody.innerHTML = usuarios
-    .map(
-      (u) => `
-        <tr>
-            <td>${formatarCPF(u.cpf)}</td>
-            <td>${u.nome}</td>
-            <td><span class="badge badge-${
-              u.tipo === "ADMIN" ? "danger" : "info"
-            }">${u.tipo}</span></td>
-            <td>${u.municipio_nome || "-"}</td>
-            <td>${u.peso || "-"}</td>
-            <td><span class="badge badge-${u.ativo ? "success" : "danger"}">${
+    .map((u) => {
+      // Badge de cor baseado no tipo
+      let badgeClass = "badge-info";
+      if (u.tipo === "ADMIN") badgeClass = "badge-danger";
+      if (u.tipo === "GOVERNADOR") badgeClass = "badge-success";
+      if (u.tipo === "SECRETARIO") badgeClass = "badge-warning";
+
+      return `
+      <tr>
+          <td>${formatarCPF(u.cpf)}</td>
+          <td>${u.nome}</td>
+          <td><span class="badge ${badgeClass}">${u.tipo}</span></td>
+          <td>${
+            u.municipio_nome ||
+            (u.tipo === "GOVERNADOR" || u.tipo === "SECRETARIO"
+              ? "N/A (Governo)"
+              : "-")
+          }</td>
+          <td>${u.peso || "-"}</td>
+          <td><span class="badge badge-${u.ativo ? "success" : "danger"}">${
         u.ativo ? "Ativo" : "Inativo"
       }</span></td>
-            <td class="table-actions">
-                <button onclick="editarUsuario(${
-                  u.id
-                })" class="btn btn-sm btn-secondary" title="Editar">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button onclick="deletarUsuario(${
-                  u.id
-                })" class="btn btn-sm btn-danger" title="Deletar">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `
-    )
+          <td class="table-actions">
+              <button onclick="editarUsuario(${
+                u.id
+              })" class="btn btn-sm btn-secondary" title="Editar">
+                  <i class="fas fa-edit"></i>
+              </button>
+              <button onclick="deletarUsuario(${
+                u.id
+              })" class="btn btn-sm btn-danger" title="Deletar">
+                  <i class="fas fa-trash"></i>
+              </button>
+          </td>
+      </tr>
+  `;
+    })
     .join("");
 }
 
@@ -810,6 +796,12 @@ function toggleCamposUsuario() {
     grupoMunicipio.style.display = "block";
     senhaInput.required = false;
     municipioSelect.required = true;
+  } else if (tipo === "GOVERNADOR" || tipo === "SECRETARIO") {
+    // NOVO: Governador e Secretário não precisam de município
+    grupoSenha.style.display = "none";
+    grupoMunicipio.style.display = "none";
+    senhaInput.required = false;
+    municipioSelect.required = false;
   } else {
     grupoSenha.style.display = "none";
     grupoMunicipio.style.display = "none";

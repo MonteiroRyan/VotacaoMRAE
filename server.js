@@ -1,127 +1,204 @@
+require("dotenv").config();
 const express = require("express");
+const mysql = require("mysql2/promise");
 const cors = require("cors");
 const path = require("path");
-const mysql = require("mysql2/promise");
-require("dotenv").config();
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+// ========== SEGURANÇA ==========
 
-// Servir arquivos estáticos com cache desabilitado em desenvolvimento
+// Headers de segurança com CSP corrigido
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdnjs.cloudflare.com",
+          "https://fonts.googleapis.com",
+        ],
+        styleSrcElem: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdnjs.cloudflare.com",
+          "https://fonts.googleapis.com",
+        ],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",
+        ],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        scriptSrcElem: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",
+        ],
+        fontSrc: [
+          "'self'",
+          "https://cdnjs.cloudflare.com",
+          "https://fonts.gstatic.com",
+          "data:",
+        ],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+        upgradeInsecureRequests:
+          process.env.NODE_ENV === "production" ? [] : null,
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+
+// Rate limiters
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    success: false,
+    message: "Muitas tentativas de login. Tente novamente em 15 minutos.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 100,
+  message: {
+    success: false,
+    message: "Muitas requisições. Aguarde um momento.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: "Muitos uploads. Tente novamente em 15 minutos.",
+  },
+});
+
+// ========== MIDDLEWARES ==========
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "*",
+    credentials: true,
+  })
+);
+
+app.use(cookieParser());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Servir arquivos estáticos com headers corretos
 app.use(
   express.static("public", {
-    maxAge: 0,
-    etag: false,
     setHeaders: (res, path) => {
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-      res.setHeader("Pragma", "no-cache");
-      res.setHeader("Expires", "0");
+      if (
+        path.endsWith(".woff") ||
+        path.endsWith(".woff2") ||
+        path.endsWith(".ttf")
+      ) {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+      }
     },
   })
 );
 
-app.get("/debug/votacao", (req, res) => {
-  const fs = require("fs");
-  const filePath = path.join(__dirname, "public", "votacao.html");
+app.use("/api/", apiLimiter);
 
-  try {
-    const content = fs.readFileSync(filePath, "utf8");
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.send(`Arquivo existe: ${fs.existsSync(filePath)}
-Tamanho: ${content.length} caracteres
-Primeiros 500 caracteres:
-${content.substring(0, 500)}
+// ========== BANCO DE DADOS ==========
 
-Últimos 200 caracteres:
-${content.substring(content.length - 200)}`);
-  } catch (error) {
-    res.status(500).send("Erro: " + error.message);
-  }
-});
-
-// Configuração do banco de dados MySQL
-const dbConfig = {
+const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "sistema_votacao",
+  database: process.env.DB_NAME || "mrae",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-};
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
+});
 
-// Criar pool de conexões
-const pool = mysql.createPool(dbConfig);
-
-// Exportar pool ANTES de importar as rotas
 global.pool = pool;
 
-// Importar rotas (após exportar pool)
+// Testar conexão
+pool
+  .getConnection()
+  .then((connection) => {
+    console.log("✅ Conexão com MySQL estabelecida");
+    connection.release();
+  })
+  .catch((err) => {
+    console.error("❌ Erro ao conectar com MySQL:", err);
+  });
+
+// ========== ROTAS ==========
+
 const authRoutes = require("./routes/authRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const votoRoutes = require("./routes/votoRoutes");
 const eventoRoutes = require("./routes/eventoRoutes");
+const votoRoutes = require("./routes/votoRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const importRoutes = require("./routes/importRoutes");
 
-// Health check endpoint
-app.get("/health", async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    await connection.ping();
-    connection.release();
-
-    res.status(200).json({
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      database: "connected",
-    });
-  } catch (error) {
-    res.status(503).json({
-      status: "unhealthy",
-      timestamp: new Date().toISOString(),
-      error: error.message,
-    });
-  }
-});
-
-// Usar rotas
+// Rotas com rate limiting específico
+app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/votos", votoRoutes);
 app.use("/api/eventos", eventoRoutes);
+app.use("/api/votos", votoRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/import/processar", uploadLimiter);
 app.use("/api/import", importRoutes);
 
-// Rota principal
+// Rota de saúde
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
+// Rota raiz
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "", "index.html"));
 });
 
-// Rotas HTML explícitas (para evitar confusão)
-app.get("/votacao.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "votacao.html"));
+// Tratamento de erros 404
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Rota não encontrada",
+  });
 });
 
-app.get("/eventos.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "eventos.html"));
-});
-
-app.get("/resultados.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "resultados.html"));
-});
-
-app.get("/admin.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-// Tratamento de erros
+// Tratamento de erros gerais
 app.use((err, req, res, next) => {
   console.error("Erro:", err);
-  res.status(500).json({
+  res.status(err.status || 500).json({
     success: false,
     message:
       process.env.NODE_ENV === "production"
@@ -130,132 +207,51 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Função para verificar se tabela existe
-async function tabelaExiste(nomeTabela) {
-  try {
-    const [rows] = await pool.query(
-      `SELECT COUNT(*) as count FROM information_schema.tables 
-       WHERE table_schema = ? AND table_name = ?`,
-      [process.env.DB_NAME || "sistema_votacao", nomeTabela]
-    );
-    return rows[0].count > 0;
-  } catch (error) {
-    console.error(`Erro ao verificar tabela ${nomeTabela}:`, error.message);
-    return false;
-  }
-}
+// ========== INICIAR SERVIDOR ==========
 
-// Limpar sessões expiradas a cada 30 minutos
-async function iniciarLimpezaSessoes() {
-  const authController = require("./controllers/authController");
+const server = app.listen(PORT, () => {
+  console.log("\n╔════════════════════════════════════════════════════════╗");
+  console.log("║        SISTEMA DE VOTAÇÃO MUNICIPAL - ES              ║");
+  console.log("╚════════════════════════════════════════════════════════╝\n");
+  console.log(`🚀 Servidor: http://localhost:${PORT}`);
+  console.log(`🔒 Ambiente: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🛡️  Segurança:`);
+  console.log(`   ✓ Rate Limiting ativado`);
+  console.log(`   ✓ Helmet (CSP, HSTS, XSS)`);
+  console.log(`   ✓ Validação de inputs`);
+  console.log(`   ✓ SQL Injection protection`);
+  console.log(`   ✓ CORS configurado`);
+  console.log(`\n📱 Acesse: http://localhost:${PORT}`);
+  console.log(`\n`);
+});
 
-  const sessoesExiste = await tabelaExiste("sessoes");
-
-  if (sessoesExiste) {
-    authController.limparSessoesExpiradas();
-
-    setInterval(() => {
-      authController.limparSessoesExpiradas();
-    }, 30 * 60 * 1000);
-
-    console.log("✅ Limpeza automática de sessões ativada");
-  } else {
-    console.log(
-      "⚠️  Tabela sessoes não existe. Limpeza de sessões desativada."
-    );
-    console.log("💡 Execute: npm run init-db");
-  }
-}
+// Limpeza de sessões expiradas (a cada hora)
+const authController = require("./controllers/authController");
+setInterval(() => {
+  authController.limparSessoesExpiradas();
+}, 60 * 60 * 1000);
 
 // Graceful shutdown
-process.on("SIGTERM", async () => {
-  console.log("SIGTERM recebido. Encerrando gracefully...");
-  await pool.end();
-  process.exit(0);
+process.on("SIGTERM", () => {
+  console.log("\n⚠️  SIGTERM recebido. Encerrando servidor...");
+  server.close(() => {
+    console.log("✅ Servidor encerrado");
+    pool.end(() => {
+      console.log("✅ Pool de conexões encerrado");
+      process.exit(0);
+    });
+  });
 });
 
-process.on("SIGINT", async () => {
-  console.log("\nSIGINT recebido. Encerrando gracefully...");
-  await pool.end();
-  process.exit(0);
-});
-
-// Inicialização do servidor
-app.listen(PORT, async () => {
-  console.log("\n╔════════════════════════════════════════════════════════╗");
-  console.log("║   🗳️  SISTEMA DE VOTAÇÃO MUNICIPAL - ESPÍRITO SANTO    ║");
-  console.log("╚════════════════════════════════════════════════════════╝\n");
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📍 Ambiente: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🌐 URL: http://localhost:${PORT}`);
-
-  try {
-    const connection = await pool.getConnection();
-    console.log("✅ Conectado ao banco de dados MySQL");
-    connection.release();
-
-    const tabelasEssenciais = [
-      "usuarios",
-      "municipios",
-      "eventos_votacao",
-      "votos",
-      "sessoes",
-    ];
-    const tabelasFaltando = [];
-
-    for (const tabela of tabelasEssenciais) {
-      const existe = await tabelaExiste(tabela);
-      if (!existe) {
-        tabelasFaltando.push(tabela);
-      }
-    }
-
-    if (tabelasFaltando.length > 0) {
-      console.log("\n⚠️  ATENÇÃO: Tabelas faltando no banco de dados:");
-      tabelasFaltando.forEach((t) => console.log(`   ❌ ${t}`));
-      console.log("\n💡 Execute o comando: npm run update-schema\n");
-    } else {
-      console.log("✅ Todas as tabelas essenciais encontradas");
-
-      try {
-        const [municipios] = await pool.query(
-          "SELECT COUNT(*) as count FROM municipios"
-        );
-        const [usuarios] = await pool.query(
-          "SELECT COUNT(*) as count FROM usuarios"
-        );
-        const [eventos] = await pool.query(
-          "SELECT COUNT(*) as count FROM eventos_votacao"
-        );
-
-        console.log(`📊 Estatísticas:`);
-        console.log(`   - Municípios: ${municipios[0].count}`);
-        console.log(`   - Usuários: ${usuarios[0].count}`);
-        console.log(`   - Eventos: ${eventos[0].count}`);
-      } catch (error) {
-        // Ignorar erros de contagem
-      }
-
-      await iniciarLimpezaSessoes();
-    }
-  } catch (error) {
-    console.error("\n❌ Erro ao conectar ao banco de dados:", error.message);
-    console.error("\n💡 Verifique:");
-    console.error("   1. MySQL está rodando");
-    console.error("   2. Credenciais no arquivo .env estão corretas");
-    console.error(
-      "   3. Banco de dados foi criado (execute: npm run init-db)\n"
-    );
-
-    if (process.env.NODE_ENV === "production") {
-      console.error("❌ Encerrando servidor (produção)...\n");
-      process.exit(1);
-    }
-  }
-
-  console.log("\n" + "=".repeat(60));
-  console.log("Sistema pronto! Aguardando requisições...");
-  console.log("=".repeat(60) + "\n");
+process.on("SIGINT", () => {
+  console.log("\n⚠️  SIGINT recebido. Encerrando servidor...");
+  server.close(() => {
+    console.log("✅ Servidor encerrado");
+    pool.end(() => {
+      console.log("✅ Pool de conexões encerrado");
+      process.exit(0);
+    });
+  });
 });
 
 module.exports = { pool };

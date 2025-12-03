@@ -1,20 +1,33 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const eventoController = require('../controllers/eventoController');
-const { verificarAutenticacao, verificarAdmin } = require('../middleware/authMiddleware');
+const eventoController = require("../controllers/eventoController");
+const {
+  verificarAutenticacao,
+  verificarAdmin,
+} = require("../middleware/authMiddleware");
 
-// Rotas protegidas por admin
-router.post('/', verificarAdmin, eventoController.criarEvento);
-router.post('/:id/iniciar', verificarAdmin, eventoController.iniciarEvento);
-router.post('/:id/liberar', verificarAdmin, eventoController.liberarVotacao); // NOVA ROTA
-router.post('/:id/encerrar', verificarAdmin, eventoController.encerrarEvento);
-router.post('/:id/participantes', verificarAdmin, eventoController.adicionarParticipantes);
-router.delete('/:id', verificarAdmin, eventoController.deletarEvento);
-router.get('/:id/exportar-csv', verificarAdmin, eventoController.exportarCSV);
+// Listar eventos
+router.get("/", verificarAutenticacao, eventoController.listarEventos);
 
-// Rotas protegidas por autenticação
-router.get('/', verificarAutenticacao, eventoController.listarEventos);
-router.get('/:id', verificarAutenticacao, eventoController.obterEvento);
-router.post('/:id/presenca', verificarAutenticacao, eventoController.marcarPresenca);
+// Obter evento específico
+router.get("/:id", verificarAutenticacao, eventoController.obterEvento);
+
+// Criar evento (apenas admin)
+router.post("/", verificarAdmin, eventoController.criarEvento);
+
+// Iniciar evento
+router.post("/:id/iniciar", verificarAdmin, eventoController.iniciarEvento);
+
+// Liberar votação
+router.post("/:id/liberar", verificarAdmin, eventoController.liberarVotacao);
+
+// Encerrar evento
+router.post("/:id/encerrar", verificarAdmin, eventoController.encerrarEvento);
+
+// Deletar evento
+router.delete("/:id", verificarAdmin, eventoController.deletarEvento);
+
+// Exportar CSV
+router.get("/:id/exportar-csv", verificarAdmin, eventoController.exportarCSV);
 
 module.exports = router;

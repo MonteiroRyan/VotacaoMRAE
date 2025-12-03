@@ -310,19 +310,17 @@
 
                 <div class="form-group">
                     <label for="eventoPesoQuorum"><i class="fas fa-percentage"></i> Quórum Mínimo (% Peso) *</label>
-                    <input type="number" id="eventoPesoQuorum" min="0" max="100" step="0.01" value="60" required>
-                    <small>Percentual mínimo de peso para validar a votação</small>
+                    <input type="number" id="eventoPesoQuorum" min="0" max="100" step="0.01" value="50.00" required>
+                    <small>
+                        Percentual mínimo de peso para liberar votação. <br>
+                        <strong>Padrão: > 50%</strong> (Peso Presente / Peso Total × 100)
+                    </small>
                 </div>
 
-                <div class="form-group">
-                    <label><i class="fas fa-users"></i> Participantes *</label>
-                    <div
-                        style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem;">
-                        <div id="listaParticipantes">
-                            <p class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando usuários...</p>
-                        </div>
-                    </div>
-                    <small>Selecione os usuários que podem participar deste evento</small>
+                <div class="info-box" style="margin-top: 1rem;">
+                    <p><strong><i class="fas fa-users"></i> Participantes Automáticos:</strong></p>
+                    <p>Todos os usuários ativos (Prefeitos, Representantes, Governador e Secretários) serão cadastrados
+                        automaticamente neste evento.</p>
                 </div>
 
                 <div id="mensagemEvento" class="mensagem"></div>
@@ -372,11 +370,16 @@
                 <div class="form-group">
                     <label for="usuarioTipo"><i class="fas fa-user-tag"></i> Tipo *</label>
                     <select id="usuarioTipo" required onchange="toggleCamposUsuario()">
-                        <option value="">Selecione...</option>
+                        <option value="">Selecione... </option>
                         <option value="ADMIN">Administrador</option>
                         <option value="PREFEITO">Prefeito</option>
                         <option value="REPRESENTANTE">Representante</option>
+                        <option value="GOVERNADOR">Governador</option>
+                        <option value="SECRETARIO">Secretário</option>
                     </select>
+                    <small>
+                        <strong>Governador e Secretário:</strong> Não precisam de município vinculado
+                    </small>
                 </div>
 
                 <div class="form-group" id="grupoSenha" style="display: none;">

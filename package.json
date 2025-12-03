@@ -8,17 +8,24 @@
     "dev": "nodemon server.js",
     "init-db": "node scripts/initDatabase.js",
     "reset-db": "node scripts/resetDatabase.js",
-    "check-db": "node scripts/checkDatabase.js"
+    "check-db": "node scripts/checkDatabase.js",
+    "senha-admin": "node scripts/CreateSecureAdmin.js",
+    "update-governador": "node scripts/updateSchemaGov.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "body-parser": "^2.2.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csurf": "^1.11.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "multer": "^2.0.2",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^7.2.0",
+    "multer": "2.0.2",
     "mysql2": "^3.6.5",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

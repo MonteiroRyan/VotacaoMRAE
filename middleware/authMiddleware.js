@@ -1,17 +1,17 @@
 const getPool = () => {
   if (global.pool) return global.pool;
-  const { pool } = require('../server');
+  const { pool } = require("../server");
   return pool;
 };
 
 const verificarAutenticacao = async (req, res, next) => {
   const pool = getPool();
-  const sessionId = req.headers['x-session-id'];
+  const sessionId = req.headers["x-session-id"];
 
   if (!sessionId) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Sessão não fornecida' 
+    return res.status(401).json({
+      success: false,
+      message: "Sessão não fornecida",
     });
   }
 
@@ -28,9 +28,9 @@ const verificarAutenticacao = async (req, res, next) => {
     );
 
     if (sessoes.length === 0) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Sessão inválida ou expirada' 
+      return res.status(401).json({
+        success: false,
+        message: "Sessão inválida ou expirada",
       });
     }
 
@@ -43,25 +43,25 @@ const verificarAutenticacao = async (req, res, next) => {
       tipo: sessao.tipo,
       municipio_id: sessao.municipio_id,
       municipio_nome: sessao.municipio_nome,
-      peso: sessao.peso
+      peso: sessao.peso,
     };
 
     next();
   } catch (error) {
-    console.error('Erro ao verificar autenticação:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Erro ao verificar autenticação' 
+    console.error("Erro ao verificar autenticação:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao verificar autenticação",
     });
   }
 };
 
 const verificarAdmin = async (req, res, next) => {
   await verificarAutenticacao(req, res, () => {
-    if (req.usuario.tipo !== 'ADMIN') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Acesso negado. Apenas administradores' 
+    if (req.usuario.tipo !== "ADMIN") {
+      return res.status(403).json({
+        success: false,
+        message: "Acesso negado. Apenas administradores",
       });
     }
     next();
@@ -70,5 +70,5 @@ const verificarAdmin = async (req, res, next) => {
 
 module.exports = {
   verificarAutenticacao,
-  verificarAdmin
+  verificarAdmin,
 };
