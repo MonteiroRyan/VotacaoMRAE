@@ -184,7 +184,7 @@ app.get("/health", (req, res) => {
 
 // Rota raiz
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Tratamento de erros 404
