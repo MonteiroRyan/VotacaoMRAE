@@ -149,7 +149,7 @@ async function initDatabase() {
 
     console.log("\n📋 Inserindo municípios do Espírito Santo...");
 
-    // 78 municípios do Espírito Santo com pesos
+    /* 78 municípios do Espírito Santo com pesos
     const municipiosES = [
       ["Afonso Cláudio", 3.5],
       ["Água Doce do Norte", 2.0],
@@ -243,7 +243,7 @@ async function initDatabase() {
         console.error(`Erro ao inserir ${nome}:`, error.message);
       }
     }
-    console.log(`✅ ${inseridos} municípios do Espírito Santo inseridos`);
+    console.log(`✅ ${inseridos} municípios do Espírito Santo inseridos`); */
 
     // Criar usuário administrador padrão
     console.log("\n👤 Criando usuário administrador...");
@@ -261,26 +261,6 @@ async function initDatabase() {
       console.log("⚠️  Usuário administrador já existe");
     }
 
-    console.log("\n🎉 Banco de dados inicializado com sucesso!");
-    console.log("\n📝 Resumo:");
-    console.log(`   ✅ 6 tabelas criadas`);
-    console.log(`   ✅ 78 municípios do Espírito Santo`);
-    console.log(`   ✅ 1 usuário administrador`);
-    console.log("\n✨ Funcionalidades do Sistema:");
-    console.log("   🗳️  3 tipos de votação (SIM_NAO, APROVACAO, ALTERNATIVAS)");
-    console.log("   ✅ Votação múltipla (checkbox para alternativas)");
-    console.log("   🏛️  Controle de votos por município");
-    console.log("   ⚖️  Quórum por peso ponderado (padrão 60%)");
-    console.log("   📅 Validação por período (data_inicio / data_fim)");
-    console.log("   🔓 Liberação de votação pelo administrador");
-    console.log("   📊 Gráfico de barras empilhadas (0-100%)");
-    console.log("   📄 Exportação CSV completa");
-    console.log("   🔔 Modais customizados de confirmação");
-    console.log("   ✋ Presença automática ao login");
-    console.log("   🕐 Sessões com expiração (1 hora)");
-    console.log("\n🚀 Próximos passos:");
-    console.log("   1. Configure o arquivo .env (se necessário)");
-    console.log("   2. Execute: npm start");
     console.log("   3. Acesse: http://localhost:3000");
     console.log("   4. Login admin: CPF 000.000.001-91 | Senha: admin123");
     console.log("\n💡 Dica: Para recriar o banco execute: npm run reset-db");

@@ -1,0 +1,66 @@
+.empty-state {
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+  animation: fadeInUp 0.5s ease;
+}
+
+.empty-state-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto var(--space-6);
+  background: var(--primary-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-xl);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.empty-state-icon i {
+  font-size: 3rem;
+  color: white;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: var(--space-3);
+  font-family: var(--font-display);
+}
+
+.empty-state p {
+  font-size: 1rem;
+  color: var(--gray-600);
+  max-width: 400px;
+  margin: 0 auto var(--space-6);
+  line-height: 1.6;
+}
+
+.empty-state.btn {
+  margin-top: var(--space-4);
+}
+
+/* Variantes de Empty State */
+.empty-state-warning .empty-state-icon {
+  background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+}
+
+.empty-state-info .empty-state-icon {
+  background: linear-gradient(135deg, var(--info) 0%, #2563eb 100%);
+}
+
+.empty-state-success .empty-state-icon {
+  background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+}
